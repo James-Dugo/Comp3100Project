@@ -15,6 +15,12 @@ public class Client {
     private BufferedReader din;
     private String reply;
 
+    private String[] serverList;
+    private int jobId;
+    private int jobCores;
+    private int jobMem;
+    private int jobDisk;
+
     static {
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
@@ -24,8 +30,38 @@ public class Client {
     }
     private static final Logger logger=Logger.getLogger(Client.class.getName());
 
+    public static void main(String[] args){
+        Client client=new Client();
+        client.newConn("localhost",50000);
+        String reply;
+
+        //HELO
+        reply=client.send("HELO\n");
+        logger.log(Level.INFO,"RCVD: "+reply);
+        //AUTH
+        String username=System.getProperty("user.name");
+        reply=client.send("AUTH "+username+"\n");
+        logger.log(Level.INFO,"RCVD: "+reply);
+        //REDY
+        reply=client.send("REDY\n");
+        logger.log(Level.INFO,"RCVD: "+reply);
+        client.parseJob(reply);
+        //GETS Capable
+        client.write(String.format("GETS Capable %i %i %i",client.jobCores,client.jobMem,client.jobDisk));
+
+        //TODO write cleanup
+        client.cleanup();
+    }
+
     /**
-     * 
+     * closes the connection and takes care of all that stuff
+     */
+    private void cleanup() {
+    }
+
+    /**
+     * Opens a new socket on the given hostname and port and setsup the
+     * din and dout
      * @param hostname
      * @param port
      */
@@ -34,9 +70,12 @@ public class Client {
             s=new Socket(hostname, port);
             dout=new DataOutputStream(s.getOutputStream());
             din=new BufferedReader(new InputStreamReader(s.getInputStream()));
-        } catch(Exception e){System.out.println(e);}
+        } catch(Exception e){
+            logger.log(Level.SEVERE,"ERR: "+e);
+        }
 
     }
+    
     /**
      * reads a line in from din
      * @return
@@ -48,6 +87,7 @@ public class Client {
             return null;
         }
 	}
+    
     /**
      * Sends a message to dout
      * @param msg
@@ -60,6 +100,7 @@ public class Client {
             logger.log(Level.SEVERE,"ERR: "+e);
         }
 	}
+    
     /**
      * Sends a message and gets the reply from the connection, TODO make this less punishing if no reply exits
      * @param msg
@@ -75,34 +116,14 @@ public class Client {
             return null;
         }
     }
-
-	public static void main(String[] args){
-        Client client=new Client();
-        //Hello
-        client.newConn("localhost",50000);
-        reply=client.send("HELO\n");
-        //Auth
-        String username=System.getProperty("user.name");
-        dout.write(("AUTH "+username+"\n").getBytes());
-        dout.flush();
-        reply=din.readLine();
-        System.out.println("Recieved: "+reply);
-
-        //Ready
-        dout.write("REDY\n".getBytes());
-        dout.flush();
-        reply=din.readLine();
-        System.out.println("Recieved: "+reply);
-
-
-        //Quit
-        dout.write("REDY\n".getBytes());
-        dout.flush();
-        reply=din.readLine();
-        System.out.println("Recieved: "+reply);
-
-        dout.close();
-        s.close();
-        }catch(Exception e){System.out.println(e);}
+    
+    /**
+     * 
+     * @param reply
+     */
+    private void parseJob(String reply) {
     }
+
+	
+    
 }
