@@ -1,11 +1,26 @@
 package Comp3100Project;
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
+import java.util.logging.LogManager;
+
 public class client {
     private Socket s;
     private DataOutputStream dout;
     private BufferedReader din;
     private String reply;
+
+    static {
+
+        try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
+        } catch (SecurityException | IOException e1) {
+            e1.printStackTrace();
+        }
+    }
 
     public void newConn(String hostname, int port){
         try{
