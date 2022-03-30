@@ -37,22 +37,14 @@ public class Client {
         client.newConn("localhost",50000);
         String reply;
 
-        //HELO
-        reply=client.send("HELO\n");
-        logger.log(Level.INFO,"RCVD: "+reply);
-
-        //AUTH
-        String username=System.getProperty("user.name");
-        reply=client.send("AUTH "+username+"\n");
-        logger.log(Level.INFO,"RCVD: "+reply);
-
+        client.ready();
         //REDY
-        reply=client.send("REDY\n");
-        logger.log(Level.INFO,"RCVD: "+reply);
-        client.parseJob(reply);
+        
 
         //GETS Capable
         reply=client.send(String.format("GETS Capable %d %d %d\n",client.jobCores,client.jobMem,client.jobDisk));
+        int numLines=Integer.parseInt(reply.split(" ")[1]);
+
         client.write("OK\n");
         /*if(!reply.matches("^DATA*")){
             logger.log(Level.SEVERE,"RCVD something wrong fromm GETS");
@@ -63,29 +55,43 @@ public class Client {
         }*/
 
         //Add servers to list
-        reply=client.recieve();
-        while(reply!=""){
+        for (int i = 0; i < numLines; i++) {
+            reply=client.recieve();
             logger.log(Level.INFO, "RCVD: "+reply);
             client.serverList.add(reply);
-            reply=client.recieve();
         }
+        reply=client.send("OK\n");
+        logger.log(Level.INFO, "RCVD: "+reply);
 
 
         //TODO write cleanup
         client.cleanup();
     }
 
+    private void ready() {
+        reply=this.send("REDY\n");
+        logger.log(Level.INFO,"RCVD: "+reply);
+        String[] jobArr = reply.split(" ");
+        if(jobArr[0]=="JOBN"){
+            parseJob(jobArr);
+        }else{
+            //TODO ready RCVD!=JOBN
+        }
+    }
+
     /**
      * closes the connection and takes care of all that stuff
      */
     private void cleanup() {
-        this.send("QUIT\n");
-        System.exit(0);
+        reply=this.send("QUIT\n");
+        if(reply=="QUIT\n"){
+            System.exit(0);
+        }
     }
 
     /**
      * Opens a new socket on the given hostname and port and setsup the
-     * din and dout
+     * din and dout, also performs the handshake
      * @param hostname
      * @param port
      */
@@ -94,6 +100,16 @@ public class Client {
             s=new Socket(hostname, port);
             dout=new DataOutputStream(s.getOutputStream());
             din=new BufferedReader(new InputStreamReader(s.getInputStream()));
+
+            //HELO
+            reply=this.send("HELO\n");
+            logger.log(Level.INFO,"RCVD: "+reply);
+
+            //AUTH
+            String username=System.getProperty("user.name");
+            reply=this.send("AUTH "+username+"\n");
+            logger.log(Level.INFO,"RCVD: "+reply);
+
         } catch(Exception e){
             logger.log(Level.SEVERE,"ERR: "+e);
         }
@@ -120,6 +136,7 @@ public class Client {
         try {
             dout.write(msg.getBytes());
             dout.flush();
+            logger.log(Level.INFO,"SENT: "+msg);
         } catch(IOException e){
             logger.log(Level.SEVERE,"ERR: "+e);
         }
@@ -145,8 +162,7 @@ public class Client {
      * Takes a JOBN reply and splits it, setting the client variables
      * @param reply
      */
-    private void parseJob(String reply) {
-        String[] jobArr = reply.split(" ");
+    private void parseJob(String[] jobArr) {
         this.jobId=Integer.parseInt(jobArr[2]);
         this.jobCores=Integer.parseInt(jobArr[4]);
         this.jobMem=Integer.parseInt(jobArr[5]);
