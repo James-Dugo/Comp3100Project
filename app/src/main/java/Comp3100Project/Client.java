@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -15,7 +17,7 @@ public class Client {
     private BufferedReader din;
     private String reply;
 
-    private String[] serverList;
+    private List<String> serverList=new ArrayList<String>();
     private int jobId;
     private int jobCores;
     private int jobMem;
@@ -38,16 +40,36 @@ public class Client {
         //HELO
         reply=client.send("HELO\n");
         logger.log(Level.INFO,"RCVD: "+reply);
+
         //AUTH
         String username=System.getProperty("user.name");
         reply=client.send("AUTH "+username+"\n");
         logger.log(Level.INFO,"RCVD: "+reply);
+
         //REDY
         reply=client.send("REDY\n");
         logger.log(Level.INFO,"RCVD: "+reply);
         client.parseJob(reply);
+
         //GETS Capable
-        client.write(String.format("GETS Capable %i %i %i",client.jobCores,client.jobMem,client.jobDisk));
+        reply=client.send(String.format("GETS Capable %d %d %d\n",client.jobCores,client.jobMem,client.jobDisk));
+        client.write("OK\n");
+        /*if(!reply.matches("^DATA*")){
+            logger.log(Level.SEVERE,"RCVD something wrong fromm GETS");
+            //TODO make this exit fix itself
+            System.exit(1);
+        } else{
+            client.write("OK\n");
+        }*/
+
+        //Add servers to list
+        reply=client.recieve();
+        while(reply!=""){
+            logger.log(Level.INFO, "RCVD: "+reply);
+            client.serverList.add(reply);
+            reply=client.recieve();
+        }
+
 
         //TODO write cleanup
         client.cleanup();
@@ -57,6 +79,8 @@ public class Client {
      * closes the connection and takes care of all that stuff
      */
     private void cleanup() {
+        this.send("QUIT\n");
+        System.exit(0);
     }
 
     /**
@@ -118,10 +142,15 @@ public class Client {
     }
     
     /**
-     * 
+     * Takes a JOBN reply and splits it, setting the client variables
      * @param reply
      */
     private void parseJob(String reply) {
+        String[] jobArr = reply.split(" ");
+        this.jobId=Integer.parseInt(jobArr[2]);
+        this.jobCores=Integer.parseInt(jobArr[4]);
+        this.jobMem=Integer.parseInt(jobArr[5]);
+        this.jobDisk=Integer.parseInt(jobArr[6]);
     }
 
 	
