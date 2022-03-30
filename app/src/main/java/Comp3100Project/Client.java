@@ -1,6 +1,7 @@
 package Comp3100Project;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,13 +12,18 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+
 public class Client {
     private Socket s;
     private DataOutputStream dout;
     private BufferedReader din;
     private String reply;
 
-    private List<String> serverList=new ArrayList<String>();
+    private List<ServerObj> serverList=new ArrayList<ServerObj>();
     private int jobId;
     private int jobCores;
     private int jobMem;
@@ -25,7 +31,7 @@ public class Client {
 
     static {
         try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("resources/logging.properties"));
+            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
         } catch (SecurityException | IOException e1) {
             e1.printStackTrace();
         }
@@ -37,56 +43,20 @@ public class Client {
         client.newConn("localhost",50000);
         String reply;
 
-        client.ready();
         //REDY
-        
+        client.ready();
+        //read the ds-server.xml file
+        client.getCapable();
 
-        //GETS Capable
-        reply=client.send(String.format("GETS Capable %d %d %d\n",client.jobCores,client.jobMem,client.jobDisk));
-        int numLines=Integer.parseInt(reply.split(" ")[1]);
+        //LOOP
+            //get the next job
+            //get the capable servers for the job
+            //schedule the job to the largest server Round robin style
 
-        client.write("OK\n");
-        /*if(!reply.matches("^DATA*")){
-            logger.log(Level.SEVERE,"RCVD something wrong fromm GETS");
-            //TODO make this exit fix itself
-            System.exit(1);
-        } else{
-            client.write("OK\n");
-        }*/
-
-        //Add servers to list
-        for (int i = 0; i < numLines; i++) {
-            reply=client.recieve();
-            logger.log(Level.INFO, "RCVD: "+reply);
-            client.serverList.add(reply);
-        }
-        reply=client.send("OK\n");
-        logger.log(Level.INFO, "RCVD: "+reply);
 
 
         //TODO write cleanup
         client.cleanup();
-    }
-
-    private void ready() {
-        reply=this.send("REDY\n");
-        logger.log(Level.INFO,"RCVD: "+reply);
-        String[] jobArr = reply.split(" ");
-        if(jobArr[0]=="JOBN"){
-            parseJob(jobArr);
-        }else{
-            //TODO ready RCVD!=JOBN
-        }
-    }
-
-    /**
-     * closes the connection and takes care of all that stuff
-     */
-    private void cleanup() {
-        reply=this.send("QUIT\n");
-        if(reply=="QUIT\n"){
-            System.exit(0);
-        }
     }
 
     /**
@@ -95,7 +65,7 @@ public class Client {
      * @param hostname
      * @param port
      */
-    public void newConn(String hostname, int port){
+    private void newConn(String hostname, int port){
         try{
             s=new Socket(hostname, port);
             dout=new DataOutputStream(s.getOutputStream());
@@ -115,6 +85,75 @@ public class Client {
         }
 
     }
+
+    /**
+     * Send a REDY and deal with the reply
+     * TODO make this handle things other than JOBN
+     */
+    private void ready() {
+        reply=this.send("REDY\n");
+        logger.log(Level.INFO,"RCVD: "+reply);
+        String[] jobArr = reply.split(" ");
+        if(jobArr[0].equals("JOBN")){
+            this.parseJob(jobArr);
+        }else{
+        }
+    }
+
+    /**
+     * 
+     */
+    private void readConfig(){
+        try{
+        File file = new File("ds-system.xml");
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(file);
+        doc.getDocumentElement().normalize();
+
+        }
+
+        //TODO figure out stack trace with logger
+        catch(Exception e){logger.log(Level.SEVERE, "ERR: "+e.getMessage());}
+    }
+    
+    /**
+     * make an array of the servers recieved from a GETS Capable
+     * store them in client.serverList
+     */
+    private void getCapable() {
+
+        //send GETS Capable * * *(curr Job info)
+        reply=this.send(String.format("GETS Capable %d %d %d\n",this.jobCores,this.jobMem,this.jobDisk));
+
+        //DATA >*< * is the num of lines
+        int numLines=Integer.parseInt(reply.split(" ")[1]);
+
+        //ready for the data
+        this.write("OK\n");
+        //Add servers to list
+        for (int i = 0; i < numLines; i++) {
+            reply=this.recieve();
+            logger.log(Level.INFO, "RCVD: "+reply);
+            this.serverList.add(new ServerObj(reply));
+        }
+
+        //finished Reading DATA * *
+        reply=this.send("OK\n");
+        logger.log(Level.INFO, "RCVD: "+reply);
+    }
+
+    /**
+     * closes the connection and takes care of all that stuff
+     */
+    private void cleanup() {
+        reply=this.send("QUIT\n");
+        if(reply=="QUIT\n"){
+            System.exit(0);
+        }
+    }
+
+
     
     /**
      * reads a line in from din
