@@ -1,6 +1,0 @@
-public class AServer{
-    public int 
-    public AServer AServer(String str) {
-        
-    }
-}
