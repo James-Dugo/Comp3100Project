@@ -40,4 +40,7 @@ public class ServerObj {
     public String getType() {
         return this.type;
     }
+    public int getLimit() {
+        return this.limit;
+    }
 }

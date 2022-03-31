@@ -26,8 +26,10 @@ public class Client {
     private DataOutputStream dout;
     private BufferedReader din;
     private String reply;
+    private String[] splitReply;
 
     private List<ServerObj> serverList=new ArrayList<ServerObj>();
+    private ServerObj largest;
     private int jobId;
     private int jobCores;
     private int jobMem;
@@ -45,28 +47,28 @@ public class Client {
     public static void main(String[] args){
         Client client=new Client();
         client.newConn("localhost",50000);
-        String reply;
 
+        //read the ds-server.xml file
         client.readConfig();
         for(int i=0;i<client.serverList.size();i++){
             logger.log(Level.INFO,"SRVR type: "+client.serverList.get(i).getType());
         }
+        client.pickLargest();
+        int i=0;
+        while(true){
+            //REDY
+            client.ready();
+            client.splitReply(" ");
+            if(client.splitReply[0].equals("JOBN")){
+                client.parseJob(client.splitReply);
+                client.schd(i);
+                i++;
+                if(i==client.largest.getLimit()){i=0;}
+            }else if(client.splitReply[0].equals("NONE")){
+                break;
+            }
+        }
 
-        
-        //REDY
-        client.ready();
-        //read the ds-server.xml file
-
-        client.getCapable();
-
-        //LOOP
-            //get the next job
-            //get the capable servers for the job
-            //schedule the job to the largest server Round robin style
-
-
-
-        //TODO write cleanup
         client.cleanup();
     }
 
@@ -98,26 +100,12 @@ public class Client {
     }
 
     /**
-     * Send a REDY and deal with the reply
-     * TODO make this handle things other than JOBN
-     */
-    private void ready() {
-        reply=this.send("REDY\n");
-        logger.log(Level.INFO,"RCVD: "+reply);
-        String[] jobArr = reply.split(" ");
-        if(jobArr[0].equals("JOBN")){
-            this.parseJob(jobArr);
-        }else{
-        }
-    }
-
-    /**
      * Reads the ds-system.xml file made by ds-server into a ServerObj class
      * and adds all of the types of servers to the client.serverList
      */
-    private void readConfig(){
+    private void readConfig() {
         try{
-        File file = new File("app/bin/main/ds-system.xml");
+        File file = new File("app/src/main/resources/ds-system.xml");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(file);
@@ -135,7 +123,42 @@ public class Client {
         //TODO figure out stack trace with logger
         catch(Exception e){logger.log(Level.SEVERE, "ERR: "+e.getMessage());}
     }
-    
+
+    /**
+     * 
+     */
+    private void pickLargest() {
+        this.largest=this.serverList.get(0);
+        for (ServerObj server : this.serverList) {
+            if(server.getCore()>this.largest.getCore()){
+                this.largest=server;
+            }
+        }
+    }
+
+    /**
+     * Send a REDY and deal with the reply
+     * TODO make this handle things other than JOBN
+     */
+    private void ready() {
+        this.reply=this.send("REDY\n");
+        logger.log(Level.INFO,"RCVD: "+reply);
+    }
+
+    /**
+     * 
+     */
+    private void splitReply(String exp) {
+        this.splitReply=this.reply.split(exp);
+    }
+
+    /**
+     * 
+     */
+    private void schd(int serverid) {
+        this.send(String.format("SCHD %d %s %d\n",this.jobId,this.largest.getType(),serverid));
+    }
+
     /**
      * make an array of the servers recieved from a GETS Capable
      * store them in client.serverList
@@ -203,10 +226,10 @@ public class Client {
      * @param msg
      * @return reply
      */
-    private String send(String msg){
+    private String send(String msg) {
         this.write(msg);
-        reply=this.recieve();
-        if(reply!=null){return reply;}
+        this.reply=this.recieve();
+        if(this.reply!=null){return this.reply;}
         else{
             logger.log(Level.SEVERE,"ERR: No reply, terminating"); 
             System.exit(1);
@@ -224,7 +247,5 @@ public class Client {
         this.jobMem=Integer.parseInt(jobArr[5]);
         this.jobDisk=Integer.parseInt(jobArr[6]);
     }
-
-	
-    
+   
 }
