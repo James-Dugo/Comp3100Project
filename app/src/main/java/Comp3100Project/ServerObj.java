@@ -1,11 +1,13 @@
 package Comp3100Project;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 
 public class ServerObj {
     private String type;
     private int id;
     private int limit;
+    private int bootupTime;
     private String status;
     private int currentStartTime;
     private int core;
@@ -23,15 +25,19 @@ public class ServerObj {
         disk=Integer.parseInt(serverArr[6]);
     }
     // format for reference <server type="juju" limit="2" bootupTime="60" hourlyRate="0.20" cores="2" memory="4000" disk="16000" />
-    public ServerObj(Element server){
-        type=server.getAttribute("type");
-        limit=Integer.parseInt(server.getAttribute("limit"));
-        core=Integer.parseInt(server.getAttribute("cores"));
-        mem=Integer.parseInt(server.getAttribute("memory"));
-        disk=Integer.parseInt(server.getAttribute("disk"));
+    public ServerObj(NamedNodeMap server){
+        type=server.getNamedItem("type").getTextContent();
+        limit=Integer.parseInt(server.getNamedItem("limit").getTextContent());
+        bootupTime=Integer.parseInt(server.getNamedItem("bootupTime").getTextContent());
+        core=Integer.parseInt(server.getNamedItem("cores").getTextContent());
+        mem=Integer.parseInt(server.getNamedItem("memory").getTextContent());
+        disk=Integer.parseInt(server.getNamedItem("disk").getTextContent());
     }
 
     public int getCore(){
         return this.core;
+    }
+    public String getType() {
+        return this.type;
     }
 }

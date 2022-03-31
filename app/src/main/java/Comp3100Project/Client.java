@@ -17,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -34,7 +35,7 @@ public class Client {
 
     static {
         try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
+            LogManager.getLogManager().readConfiguration(new FileInputStream("/bin/main/logging.properties"));//TODO, easier to troubleshoot without logging file
         } catch (SecurityException | IOException e1) {
             e1.printStackTrace();
         }
@@ -46,11 +47,15 @@ public class Client {
         client.newConn("localhost",50000);
         String reply;
 
+        client.readConfig();
+        for(int i=0;i<client.serverList.size();i++){
+            logger.log(Level.INFO,"SRVR type: "+client.serverList.get(i).getType());
+        }
+
+        
         //REDY
         client.ready();
         //read the ds-server.xml file
-        client.readConfig();
-        logger.log(Level.INFO, "CONFIG: "+client.serverList.toString());
 
         client.getCapable();
 
@@ -107,21 +112,22 @@ public class Client {
     }
 
     /**
-     * 
+     * Reads the ds-system.xml file made by ds-server into a ServerObj class
+     * and adds all of the types of servers to the client.serverList
      */
     private void readConfig(){
         try{
-        File file = new File("ds-system.xml");
+        File file = new File("app/bin/main/ds-system.xml");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(file);
         doc.getDocumentElement().normalize();
-        NodeList list = doc.getElementsByTagName("servers");
+        NodeList list = doc.getElementsByTagName("server");
         for(int i=0;i<list.getLength();i++){
             Node node = list.item(i);
             if (node.getNodeType()==Node.ELEMENT_NODE){
-                Element element = (Element) node; 
-                this.serverList.add(new ServerObj(element));
+                NamedNodeMap nMap = node.getAttributes();
+                this.serverList.add(new ServerObj(nMap));
             }
         }
         }
