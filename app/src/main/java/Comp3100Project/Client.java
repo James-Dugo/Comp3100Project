@@ -16,6 +16,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class Client {
     private Socket s;
@@ -46,6 +49,9 @@ public class Client {
         //REDY
         client.ready();
         //read the ds-server.xml file
+        client.readConfig();
+        logger.log(Level.INFO, "CONFIG: "+client.serverList.toString());
+
         client.getCapable();
 
         //LOOP
@@ -110,7 +116,14 @@ public class Client {
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(file);
         doc.getDocumentElement().normalize();
-
+        NodeList list = doc.getElementsByTagName("servers");
+        for(int i=0;i<list.getLength();i++){
+            Node node = list.item(i);
+            if (node.getNodeType()==Node.ELEMENT_NODE){
+                Element element = (Element) node; 
+                this.serverList.add(new ServerObj(element));
+            }
+        }
         }
 
         //TODO figure out stack trace with logger
@@ -153,8 +166,6 @@ public class Client {
         }
     }
 
-
-    
     /**
      * reads a line in from din
      * @return
