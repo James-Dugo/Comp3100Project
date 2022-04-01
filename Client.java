@@ -27,6 +27,7 @@ public class Client {
     private BufferedReader din;
     private String reply;
     private String[] splitReply;
+    private Boolean flag=false;
 
     private List<ServerObj> serverList=new ArrayList<ServerObj>();
     private ServerObj largest;
@@ -37,7 +38,7 @@ public class Client {
 
     static {
         try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("/bin/main/logging.properties"));//TODO, easier to troubleshoot without logging file
+            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
         } catch (SecurityException | IOException e1) {
             e1.printStackTrace();
         }
@@ -48,12 +49,32 @@ public class Client {
         Client client=new Client();
         client.newConn("localhost",50000);
 
-        //read the ds-server.xml file
-        client.readConfig();
-        for(int i=0;i<client.serverList.size();i++){
-            logger.log(Level.INFO,"SRVR type: "+client.serverList.get(i).getType());
+        //TODO set the client.flag by a command line arg
+        //getting server info from ds-server.xml
+        if(client.flag){
+            client.readConfig();
+            for(int i=0;i<client.serverList.size();i++){
+                logger.log(Level.INFO,"SRVR type: "+client.serverList.get(i).getType());
+            }
+            client.pickLargest();
         }
-        client.pickLargest();
+        //getting server info from GETS
+        else{
+            //send ready and GETS
+            client.ready();
+            client.parseJob(client.reply.split(" "));
+            client.getCapable();
+
+            client.pickLargest();
+
+            //for each server in the list, if its the same type as the largest increment the limit for the largest serverObj
+            for (ServerObj server:client.serverList){
+                if(server.getType().equals(client.largest.getType())){
+                    client.largest.incrementLimit();
+                }
+            }
+        }
+
         int i=0;
         while(true){
             //REDY
@@ -105,7 +126,7 @@ public class Client {
      */
     private void readConfig() {
         try{
-        File file = new File("app/src/main/resources/ds-system.xml");
+        File file = new File("ds-system.xml");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(file);
@@ -137,7 +158,7 @@ public class Client {
     }
 
     /**
-     * Send a REDY and deal with the reply
+     * Send a REDY and put the reply into this.reply
      * TODO make this handle things other than JOBN
      */
     private void ready() {
@@ -177,7 +198,8 @@ public class Client {
         for (int i = 0; i < numLines; i++) {
             reply=this.recieve();
             logger.log(Level.INFO, "RCVD: "+reply);
-            this.serverList.add(new ServerObj(reply));
+            ServerObj server= new ServerObj(reply);
+            this.serverList.add(server);            
         }
 
         //finished Reading DATA * *
@@ -238,7 +260,7 @@ public class Client {
     }
     
     /**
-     * Takes a JOBN reply and splits it, setting the client variables
+     * Takes a split JOBN reply and sets the client variables
      * @param reply
      */
     private void parseJob(String[] jobArr) {

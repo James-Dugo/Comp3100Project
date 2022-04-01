@@ -6,7 +6,7 @@ import org.w3c.dom.NamedNodeMap;
 public class ServerObj {
     private String type;
     private int id;
-    private int limit;
+    private int limit=0;
     private int bootupTime;
     private String status;
     private int currentStartTime;
@@ -42,5 +42,8 @@ public class ServerObj {
     }
     public int getLimit() {
         return this.limit;
+    }
+    public void incrementLimit() {
+        this.limit++;
     }
 }
