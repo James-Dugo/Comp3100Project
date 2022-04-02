@@ -78,42 +78,54 @@ public class Client {
         int i=0;
         int tmp=0;
         while(true){
-            //REDY
-            client.ready();
-            client.splitReply(" ");
+
             if(client.splitReply[0].equals("JOBN")){
                 client.parseJob(client.splitReply);
 
-                client.reply=client.send(String.format("GETS Capable %d %d %d\n",client.jobCores,client.jobMem,client.jobDisk));
-                client.splitReply(" ");
-                tmp=Integer.parseInt(client.splitReply[1]);
-                client.reply=client.send("OK\n");
-                logger.log(Level.INFO, "RCVD: "+client.reply);
-                client.splitReply(" ");
-                for(int j=0;j<tmp-1;j++){logger.log(Level.INFO, "RCVD: "+client.recieve());}
+                //dont need to GETS if this is the first time after .getCapable()
+                if(! client.reply.equals(".\n")){
+                    //Gets Capable that dumps the info (just so that the server log is identical to ds-client)
+                    client.reply=client.send(String.format("GETS Capable %d %d %d\n",client.jobCores,client.jobMem,client.jobDisk));
+                    client.splitReply(" ");
+                    tmp=Integer.parseInt(client.splitReply[1]);
+                    client.reply=client.send("OK\n");
+                    logger.log(Level.INFO, "RCVD: "+client.reply);
+                    client.splitReply(" ");
+                    for(int j=0;j<tmp-1;j++){logger.log(Level.INFO, "RCVD: "+client.recieve());}
 
-                client.reply=client.send("OK\n");
-                logger.log(Level.INFO, "RCVD: "+client.reply);
-
-                client.schd(i);
-                if(client.reply.equals("OK\n")){
-                    logger.log(Level.SEVERE, "RCVD: "+client.reply+" Expected OK");
+                    client.reply=client.send("OK\n");
+                    logger.log(Level.INFO, "RCVD: "+client.reply);
                 }
+
+                //schedule the job to server, client.largest id i
+                client.schd(i);
+                //If SCHD fails log SEVERE
+                if(client.reply.equals("OK\n")){logger.log(Level.SEVERE, "RCVD: "+client.reply+" Expected OK");}
+                //SCHD successful
                 logger.log(Level.INFO, "RCVD: "+client.reply);
 
+                //handles the round robbin part of lrr
                 i++;
                 if(i==client.largest.getLimit()){i=0;}
-            }else if(client.splitReply[0].equals("NONE")){
+
+            }
+            //if reply==!JOBN&reply==NONE we are done Scheduling
+            else if(client.splitReply[0].equals("NONE")){
                 break;
             }
+
+            //Get the next message from the server
+            client.ready();
+            client.splitReply(" ");
         }
 
         client.cleanup();
     }
 
     /**
-     * Opens a new socket on the given hostname and port and setsup the
-     * din and dout, also performs the handshake
+     * Opens a new socket on the given hostname and port setsup the
+     * din and dout,
+     * then performs the handshake
      * @param hostname
      * @param port
      */
@@ -144,27 +156,27 @@ public class Client {
      */
     private void readConfig() {
         try{
-        File file = new File("ds-system.xml");
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(file);
-        doc.getDocumentElement().normalize();
-        NodeList list = doc.getElementsByTagName("server");
-        for(int i=0;i<list.getLength();i++){
-            Node node = list.item(i);
-            if (node.getNodeType()==Node.ELEMENT_NODE){
-                NamedNodeMap nMap = node.getAttributes();
-                this.serverList.add(new ServerObj(nMap));
+            File file = new File("ds-system.xml");
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(file);
+            doc.getDocumentElement().normalize();
+            NodeList list = doc.getElementsByTagName("server");
+            for(int i=0;i<list.getLength();i++){
+                Node node = list.item(i);
+                if (node.getNodeType()==Node.ELEMENT_NODE){
+                    NamedNodeMap nMap = node.getAttributes();
+                    this.serverList.add(new ServerObj(nMap));
+                }
             }
         }
-        }
 
-        //TODO figure out stack trace with logger
         catch(Exception e){logger.log(Level.SEVERE, "ERR: "+e.getMessage());}
     }
 
     /**
-     * 
+     * checks through the list of servers and sets this.largest
+     * to the server with the most cores
      */
     private void pickLargest() {
         this.largest=this.serverList.get(0);
@@ -177,7 +189,6 @@ public class Client {
 
     /**
      * Send a REDY and put the reply into this.reply
-     * TODO make this handle things other than JOBN
      */
     private void ready() {
         this.reply=this.send("REDY\n");
@@ -185,14 +196,17 @@ public class Client {
     }
 
     /**
-     * 
+     * Splits this.reply into this.splitReply
+     * based on regex:exp
+     * @param String exp
      */
     private void splitReply(String exp) {
         this.splitReply=this.reply.split(exp);
     }
 
     /**
-     * 
+     * schedules this.jobId to this.largest.getType(), serverid 
+     * @param int serverid
      */
     private void schd(int serverid) {
         this.reply=this.send(String.format("SCHD %d %s %d\n",this.jobId,this.largest.getType(),serverid));
@@ -226,7 +240,7 @@ public class Client {
     }
 
     /**
-     * closes the connection and takes care of all that stuff
+     * closes the connection
      */
     private void cleanup() {
         reply=this.send("QUIT\n");
@@ -237,7 +251,7 @@ public class Client {
 
     /**
      * reads a line in from din
-     * @return
+     * @return String the line read in as a String
      */
     private String recieve() {
         try{return din.readLine();}
@@ -249,7 +263,7 @@ public class Client {
     
     /**
      * Sends a message to dout
-     * @param msg
+     * @param msg the message to be written
      */
 	private void write(String msg) {
         try {
@@ -262,7 +276,7 @@ public class Client {
 	}
     
     /**
-     * Sends a message and gets the reply from the connection, TODO make this less punishing if no reply exits
+     * Sends a message and gets the reply from the connection
      * @param msg
      * @return reply
      */
@@ -280,7 +294,7 @@ public class Client {
     
     /**
      * Takes a split JOBN reply and sets the client variables
-     * @param reply
+     * @param JobArr a strArr that looks like {"JOBN",...)
      */
     private void parseJob(String[] jobArr) {
         this.jobId=Integer.parseInt(jobArr[2]);
