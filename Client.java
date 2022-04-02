@@ -62,7 +62,8 @@ public class Client {
         else{
             //send ready and GETS
             client.ready();
-            client.parseJob(client.reply.split(" "));
+            client.splitReply(" ");
+            client.parseJob(client.splitReply);
             client.getCapable();
 
             client.pickLargest();
@@ -79,7 +80,7 @@ public class Client {
         int tmp=0;
         while(true){
 
-            if(client.splitReply[0].equals("JOBN")){
+            if(client.reply.equals(".\n")|client.splitReply[0].equals("JOBN")){
                 client.parseJob(client.splitReply);
 
                 //dont need to GETS if this is the first time after .getCapable()
