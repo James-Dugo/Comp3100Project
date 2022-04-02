@@ -76,13 +76,31 @@ public class Client {
         }
 
         int i=0;
+        int tmp=0;
         while(true){
             //REDY
             client.ready();
             client.splitReply(" ");
             if(client.splitReply[0].equals("JOBN")){
                 client.parseJob(client.splitReply);
+
+                client.reply=client.send(String.format("GETS Capable %d %d %d\n",client.jobCores,client.jobMem,client.jobDisk));
+                client.splitReply(" ");
+                tmp=Integer.parseInt(client.splitReply[1]);
+                client.reply=client.send("OK\n");
+                logger.log(Level.INFO, "RCVD: "+client.reply);
+                client.splitReply(" ");
+                for(int j=0;j<tmp-1;j++){logger.log(Level.INFO, "RCVD: "+client.recieve());}
+
+                client.reply=client.send("OK\n");
+                logger.log(Level.INFO, "RCVD: "+client.reply);
+
                 client.schd(i);
+                if(client.reply.equals("OK\n")){
+                    logger.log(Level.SEVERE, "RCVD: "+client.reply+" Expected OK");
+                }
+                logger.log(Level.INFO, "RCVD: "+client.reply);
+
                 i++;
                 if(i==client.largest.getLimit()){i=0;}
             }else if(client.splitReply[0].equals("NONE")){
@@ -177,7 +195,7 @@ public class Client {
      * 
      */
     private void schd(int serverid) {
-        this.send(String.format("SCHD %d %s %d\n",this.jobId,this.largest.getType(),serverid));
+        this.reply=this.send(String.format("SCHD %d %s %d\n",this.jobId,this.largest.getType(),serverid));
     }
 
     /**
@@ -249,9 +267,10 @@ public class Client {
      * @return reply
      */
     private String send(String msg) {
+        String temp;
         this.write(msg);
-        this.reply=this.recieve();
-        if(this.reply!=null){return this.reply;}
+        temp=this.recieve();
+        if(temp!=null){return temp;}
         else{
             logger.log(Level.SEVERE,"ERR: No reply, terminating"); 
             System.exit(1);
