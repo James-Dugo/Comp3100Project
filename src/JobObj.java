@@ -16,4 +16,15 @@ public class JobObj {
     public int getCores(){return jobCores;}
     public int getMem(){return jobMem;}
     public int getDisk(){return jobDisk;}
+
+    /**
+     * 
+     */
+    public String[] capableMsg(){
+        String[] msg=new String[3];
+        msg[0]=Integer.toString(jobCores);
+        msg[1]=Integer.toString(jobMem);
+        msg[2]=Integer.toString(jobDisk);
+        return msg;
+    }
 }
