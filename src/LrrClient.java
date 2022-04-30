@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -21,13 +20,14 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class Client {
+public class LrrClient implements Client{
+    
     private Socket s;
     private DataOutputStream dout;
     private BufferedReader din;
     private String reply;
     private String[] splitReply;
-    private Boolean flag=false;
+    private Boolean xmlFlag=false;
 
     private List<ServerObj> serverList=new ArrayList<ServerObj>();
     private ServerObj largest;
@@ -43,10 +43,10 @@ public class Client {
             e1.printStackTrace();
         }
     }
-    private static final Logger logger=Logger.getLogger(Client.class.getName());
+    private static final Logger logger=Logger.getLogger(ClientLRR.class.getName());
 
     public static void main(String[] args){
-        Client client=new Client();
+        ClientLRR client=new ClientLRR();
         client.newConn("localhost",50000);
 
         //TODO set the client.flag by a command line arg
