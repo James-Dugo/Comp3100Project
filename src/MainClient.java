@@ -6,22 +6,16 @@ import java.util.logging.Logger;
 //this class is the highest level class handling the top level of the client runtime
 public class MainClient {
 
-    static {
-        try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
-        } catch (SecurityException | IOException e1) {
-            e1.printStackTrace();
-        }
-    }
-    public static final Logger logger=Logger.getLogger(MainClient.class.getName());
-
     public static void main(String[] args) {
-        
-        if(args.length==2){
-            if(args[1].equalsIgnoreCase("fc")){
+        args=new String[] {"lrr"};
+        for(String arg:args){
+            System.out.println(arg);
+        }        
+        if(args.length==1){
+            if(args[0].equalsIgnoreCase("fc")){
                 FcClient client=new FcClient();
                 client.mainLoop();
-            }else if(args[1].equalsIgnoreCase("lrr")){
+            }else if(args[0].equalsIgnoreCase("lrr")){
                 LrrClient client=new LrrClient();
                 client.mainLoop();
             }

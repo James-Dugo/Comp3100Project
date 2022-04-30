@@ -55,11 +55,9 @@ public abstract class Client {
             this.din=new BufferedReader(new InputStreamReader(s.getInputStream()));
             //HELO
             this.send("HELO\n");
-            logger.log(Level.INFO,"RCVD: "+this.reply);
             //AUTH
             String username=System.getProperty("user.name");
             this.send("AUTH "+username+"\n");
-            logger.log(Level.INFO,"RCVD: "+this.reply);
         } catch(Exception e){
             logger.log(Level.SEVERE,"ERR: "+e);
         }
@@ -133,9 +131,9 @@ public abstract class Client {
         int numLines=Integer.parseInt(this.reply.split(" ")[1]);
 
         //ready for the data
-        this.write("OK\n");
+        this.send("OK\n");
         //Add servers to list
-        for (int i = 0; i < numLines; i++) {
+        for (int i = 0; i < numLines-1; i++) {
             this.recieve();
             ServerObj server= new ServerObj(this.reply);
             this.serverList.add(server);
@@ -156,11 +154,21 @@ public abstract class Client {
         this.send(String.format("SCHD %d %s %d\n",jobId,server,serverid));
     }
 
+    public void splitReply(){
+        this.splitReply=this.reply.split(" ");
+    }
     /**
      * closes the connection
      */
     public void cleanup() {
         this.send("QUIT\n");
+        try {
+            this.dout.close();
+			this.din.close();
+            this.s.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         if(this.reply=="QUIT\n"){
             System.exit(0);
         }

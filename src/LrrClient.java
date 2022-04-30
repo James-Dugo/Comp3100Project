@@ -26,7 +26,8 @@ public class LrrClient extends Client{
             //Assuming the first loop reply is a JOBN and that
             //no GETS will add a new largest server
             if(firstLoop){
-                this.send("REDY/n");
+                this.send("REDY\n");
+                this.currentJob=new JobObj(this.reply);
                 this.getCapable();
                 this.pickLargest();
                 schd(currentServerId);
@@ -38,10 +39,12 @@ public class LrrClient extends Client{
                 firstLoop=false;
                 continue loop;
             }else{
-                this.send("REDY/n");
+                this.send("REDY\n");
+                this.splitReply();
                 swizzle:
-                switch(this.reply){
+                switch(this.splitReply[0]){
                     case("JOBN"):
+                        this.currentJob=new JobObj(this.reply);
                         this.getCapable();
                         schd(currentServerId);
                         if(currentServerId>this.largest.getLimit()){
@@ -55,6 +58,7 @@ public class LrrClient extends Client{
                 }
             }
         }
+        this.cleanup();
     }
 
     /**
