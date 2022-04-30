@@ -20,38 +20,16 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class LrrClient implements Client{
-    
-    private Socket s;
-    private DataOutputStream dout;
-    private BufferedReader din;
-    private String reply;
-    private String[] splitReply;
-    private Boolean xmlFlag=false;
+public class LrrClient extends Client{
 
-    private List<ServerObj> serverList=new ArrayList<ServerObj>();
-    private ServerObj largest;
-    private int jobId;
-    private int jobCores;
-    private int jobMem;
-    private int jobDisk;
-
-    static {
-        try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
-        } catch (SecurityException | IOException e1) {
-            e1.printStackTrace();
-        }
-    }
-    private static final Logger logger=Logger.getLogger(ClientLRR.class.getName());
 
     public static void main(String[] args){
-        ClientLRR client=new ClientLRR();
+        LrrClient client=new LrrClient();
         client.newConn("localhost",50000);
 
         //TODO set the client.flag by a command line arg
         //getting server info from ds-server.xml
-        if(client.flag){
+        if(this.xmlFlag){
             client.readConfig();
             for(int i=0;i<client.serverList.size();i++){
                 logger.log(Level.INFO,"SRVR type: "+client.serverList.get(i).getType());
@@ -123,57 +101,7 @@ public class LrrClient implements Client{
         client.cleanup();
     }
 
-    /**
-     * Opens a new socket on the given hostname and port setsup the
-     * din and dout,
-     * then performs the handshake
-     * @param hostname
-     * @param port
-     */
-    private void newConn(String hostname, int port){
-        try{
-            s=new Socket(hostname, port);
-            dout=new DataOutputStream(s.getOutputStream());
-            din=new BufferedReader(new InputStreamReader(s.getInputStream()));
 
-            //HELO
-            reply=this.send("HELO\n");
-            logger.log(Level.INFO,"RCVD: "+reply);
-
-            //AUTH
-            String username=System.getProperty("user.name");
-            reply=this.send("AUTH "+username+"\n");
-            logger.log(Level.INFO,"RCVD: "+reply);
-
-        } catch(Exception e){
-            logger.log(Level.SEVERE,"ERR: "+e);
-        }
-
-    }
-
-    /**
-     * Reads the ds-system.xml file made by ds-server into a ServerObj class
-     * and adds all of the types of servers to the client.serverList
-     */
-    private void readConfig() {
-        try{
-            File file = new File("ds-system.xml");
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(file);
-            doc.getDocumentElement().normalize();
-            NodeList list = doc.getElementsByTagName("server");
-            for(int i=0;i<list.getLength();i++){
-                Node node = list.item(i);
-                if (node.getNodeType()==Node.ELEMENT_NODE){
-                    NamedNodeMap nMap = node.getAttributes();
-                    this.serverList.add(new ServerObj(nMap));
-                }
-            }
-        }
-
-        catch(Exception e){logger.log(Level.SEVERE, "ERR: "+e.getMessage());}
-    }
 
     /**
      * checks through the list of servers and sets this.largest
@@ -250,58 +178,18 @@ public class LrrClient implements Client{
         }
     }
 
-    /**
-     * reads a line in from din
-     * @return String the line read in as a String
-     */
-    private String recieve() {
-        try{return din.readLine();}
-        catch(IOException e){
-            logger.log(Level.SEVERE,"ERR: "+e);
-            return null;
-        }
-	}
+
     
-    /**
-     * Sends a message to dout
-     * @param msg the message to be written
-     */
-	private void write(String msg) {
-        try {
-            dout.write(msg.getBytes());
-            dout.flush();
-            logger.log(Level.INFO,"SENT: "+msg);
-        } catch(IOException e){
-            logger.log(Level.SEVERE,"ERR: "+e);
-        }
-	}
+
     
-    /**
-     * Sends a message and gets the reply from the connection
-     * @param msg
-     * @return reply
-     */
-    private String send(String msg) {
-        String temp;
-        this.write(msg);
-        temp=this.recieve();
-        if(temp!=null){return temp;}
-        else{
-            logger.log(Level.SEVERE,"ERR: No reply, terminating"); 
-            System.exit(1);
-            return null;
-        }
-    }
+
     
     /**
      * Takes a split JOBN reply and sets the client variables
      * @param JobArr a strArr that looks like {"JOBN",...)
      */
     private void parseJob(String[] jobArr) {
-        this.jobId=Integer.parseInt(jobArr[2]);
-        this.jobCores=Integer.parseInt(jobArr[4]);
-        this.jobMem=Integer.parseInt(jobArr[5]);
-        this.jobDisk=Integer.parseInt(jobArr[6]);
+
     }
    
 }
