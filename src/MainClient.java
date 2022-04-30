@@ -13,13 +13,19 @@ public class MainClient {
             e1.printStackTrace();
         }
     }
-    public static final Logger logger=Logger.getLogger(LrrClient.class.getName());
+    public static final Logger logger=Logger.getLogger(MainClient.class.getName());
 
     public static void main(String[] args) {
         
-        if(args.length<2){usage();}
-        ClientFactory factory=new ClientFactory();
-
+        if(args.length==2){
+            if(args[1].equalsIgnoreCase("fc")){
+                FcClient client=new FcClient();
+                client.mainLoop();
+            }else if(args[1].equalsIgnoreCase("lrr")){
+                LrrClient client=new LrrClient();
+                client.mainLoop();
+            }
+        } else {usage();}
     }
 
     private static void usage(){
