@@ -22,17 +22,14 @@ import org.w3c.dom.NodeList;
 
 public abstract class Client {
 
-    private Socket s;
-    private DataOutputStream dout;
-    private BufferedReader din;
-    private String reply;
-    private String[] splitReply;
-    private Boolean xmlFlag=false;
-
-    private List<ServerObj> serverList=new ArrayList<ServerObj>();
-    private ServerObj largest;
-    private JobObj currentJob;
-
+    public Boolean xmlFlag=false;
+    public Socket s;
+    public DataOutputStream dout;
+    public BufferedReader din;
+    public String reply;
+    public String[] splitReply;
+    public List<ServerObj> serverList=new ArrayList<ServerObj>();
+    public JobObj currentJob;
 
     //Setup the logger
     static {
@@ -42,7 +39,7 @@ public abstract class Client {
             e1.printStackTrace();
         }
     }
-    private static final Logger logger=Logger.getLogger(LrrClient.class.getName());
+    public static final Logger logger=Logger.getLogger(LrrClient.class.getName());
 
     /**
      * Opens a new socket on the given hostname and port setsup the
@@ -51,18 +48,18 @@ public abstract class Client {
      * @param hostname
      * @param port
      */
-    void newConn(String hostname, int port){
+    public void newConn(String hostname, int port){
         try{
-            s=new Socket(hostname, port);
-            dout=new DataOutputStream(s.getOutputStream());
-            din=new BufferedReader(new InputStreamReader(s.getInputStream()));
+            this.s=new Socket(hostname, port);
+            this.dout=new DataOutputStream(s.getOutputStream());
+            this.din=new BufferedReader(new InputStreamReader(s.getInputStream()));
             //HELO
             this.send("HELO\n");
             logger.log(Level.INFO,"RCVD: "+this.reply);
             //AUTH
             String username=System.getProperty("user.name");
-            reply=this.send("AUTH "+username+"\n");
-            logger.log(Level.INFO,"RCVD: "+reply);
+            this.send("AUTH "+username+"\n");
+            logger.log(Level.INFO,"RCVD: "+this.reply);
         } catch(Exception e){
             logger.log(Level.SEVERE,"ERR: "+e);
         }
@@ -118,8 +115,55 @@ public abstract class Client {
         }
 	}
 
-    public void getCapable(){
+    /**
+     * clear the current serverList
+     * make an array of the servers recieved from a GETS Capable
+     * store them in client.serverList
+     */
+    public void getCapable() {
 
+        //clear the stale list
+        this.serverList.clear();
+
+        //send GETS Capable * * *(curr Job info)
+        String[] msg=this.currentJob.capableMsg();
+        this.send(String.format("GETS Capable %s %s %s\n",(Object[]) msg));
+
+        //DATA >*< * is the num of lines
+        int numLines=Integer.parseInt(this.reply.split(" ")[1]);
+
+        //ready for the data
+        this.write("OK\n");
+        //Add servers to list
+        for (int i = 0; i < numLines; i++) {
+            this.recieve();
+            ServerObj server= new ServerObj(this.reply);
+            this.serverList.add(server);
+        }
+
+        //finished Reading DATA * *
+        this.send("OK\n");
+        logger.log(Level.INFO, "RCVD: "+this.reply);
+    }
+
+    /**
+     * sends a message SCHD jobId server serverid
+     * @param jobId
+     * @param server
+     * @param serverid
+     */
+    public void schd(int jobId, String server, int serverid) {
+        this.send(String.format("SCHD %d %s %d\n",jobId,server,serverid));
+    }
+
+    /**
+     * closes the connection
+     */
+    public void cleanup() {
+        this.send("QUIT\n");
+        if(this.reply=="QUIT\n"){
+            System.exit(0);
+        }
     }
 
     /**
@@ -148,4 +192,8 @@ public abstract class Client {
         catch(Exception e){logger.log(Level.SEVERE, "ERR: "+e.getMessage());}
     }
 
+    /**
+     * This method handles what the client wants to do each cycle of the simulation
+     */
+    abstract void mainLoop();
 }
