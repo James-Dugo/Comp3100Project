@@ -18,8 +18,10 @@ public class FcClient extends Client{
         loop:
         while(true){
             this.send("REDY\n");
-            switch(this.reply){
+            this.splitReply();
+            switch(this.splitReply[0]){
                 case "JOBN":
+                    this.currentJob=new JobObj(this.reply);
                     this.getCapable();
                     this.first=this.serverList.get(0);
                     this.schd(this.currentJob.getID(),this.first.getType(),0);
@@ -28,7 +30,7 @@ public class FcClient extends Client{
                     this.cleanup();
                     break loop;
                 default:
-                    this.logger.log(Level.INFO,"Reached default switch in FcClient");
+                    continue loop;
             }
         }
         

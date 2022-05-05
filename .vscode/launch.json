@@ -9,7 +9,7 @@
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "args": "lrr localhost 50000"
+            "args": "fc localhost 50000"
         },
         {
             "type": "java",
@@ -17,7 +17,7 @@
             "request": "launch",
             "mainClass": "MainClient",
             "projectName": "Comp3100Project_ff4bb140",
-            "args": "lrr localhost 50000"
+            "args": "fc localhost 50000"
         }
     ]
 }
