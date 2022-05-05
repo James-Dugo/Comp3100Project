@@ -14,7 +14,8 @@ public class LrrClient extends Client{
     
     /**
      * checks through the list of servers and sets this.largest
-     * to the server with the most cores
+     * to the server with the most cores, it then sets the "limit"
+     * or number of that type of server for iterating through later
      */
     void pickLargest() {
         this.largest=this.serverList.get(0);
@@ -23,6 +24,13 @@ public class LrrClient extends Client{
                 this.largest=server;
             }
         }
+
+        for (ServerObj server : this.serverList){
+            if(server.getType().equals(this.largest.getType())){
+                this.largest.incrementLimit();
+            }
+        }
+        this.largest.decrLimit();
     }
 
     void mainLoop(){
@@ -40,10 +48,10 @@ public class LrrClient extends Client{
                 this.getCapable();
                 this.pickLargest();
                 schd(currentServerId);
-                if(currentServerId>this.largest.getLimit()){
-                    currentServerId=0;
-                }else{
+                if(currentServerId<this.largest.getLimit()){
                     currentServerId++;
+                }else{
+                    currentServerId=0;
                 }
                 firstLoop=false;
                 continue loop;
@@ -56,10 +64,10 @@ public class LrrClient extends Client{
                         this.currentJob=new JobObj(this.reply);
                         this.getCapable();
                         schd(currentServerId);
-                        if(currentServerId>this.largest.getLimit()){
-                            currentServerId=0;
-                        }else{
+                        if(currentServerId<this.largest.getLimit()){
                             currentServerId++;
+                        }else{
+                            currentServerId=0;
                         }
                         break swizzle;
                     case "NONE": break loop;

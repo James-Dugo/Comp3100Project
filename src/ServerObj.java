@@ -45,4 +45,7 @@ public class ServerObj {
     public void incrementLimit() {
         this.limit++;
     }
+    public void decrLimit(){
+        this.limit--;
+    }
 }

@@ -132,10 +132,10 @@ public abstract class Client {
         int numLines=Integer.parseInt(this.reply.split(" ")[1]);
 
         //ready for the data
-        this.send("OK\n");
+        this.write("OK\n");
         //Add servers to list
-        for (int i = 0; i < numLines-1; i++) {
-            this.recieve();
+        for (int i = 0; i < numLines; i++) {
+            this.reply=this.recieve();
             ServerObj server= new ServerObj(this.reply);
             this.serverList.add(server);
         }
