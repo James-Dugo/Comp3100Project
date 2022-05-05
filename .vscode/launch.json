@@ -16,7 +16,7 @@
             "request": "launch",
             "mainClass": "MainClient",
             "projectName": "Comp3100Project_ff4bb140",
-            "args": "lrr"
+            "args": "lrr localhost 50000"
         }
     ]
 }

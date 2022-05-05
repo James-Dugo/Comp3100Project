@@ -3,6 +3,15 @@ public class LrrClient extends Client{
 
     ServerObj largest;
 
+    
+    /**
+     * Constructor method that sets the hostname and port
+     */
+    LrrClient(String host,int port){
+        this.hostname=host;
+        this.port=port;    
+    }
+    
     /**
      * checks through the list of servers and sets this.largest
      * to the server with the most cores
@@ -43,7 +52,7 @@ public class LrrClient extends Client{
                 this.splitReply();
                 swizzle:
                 switch(this.splitReply[0]){
-                    case("JOBN"):
+                    case "JOBN":
                         this.currentJob=new JobObj(this.reply);
                         this.getCapable();
                         schd(currentServerId);
@@ -53,7 +62,7 @@ public class LrrClient extends Client{
                             currentServerId++;
                         }
                         break swizzle;
-                    case("NONE"): break loop;
+                    case "NONE": break loop;
                     default: break swizzle;
                 }
             }
