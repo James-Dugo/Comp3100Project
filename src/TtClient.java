@@ -51,10 +51,23 @@ public class TtClient extends Client{
 
 
     private ServerObj getStar() {
+        int min=Integer.MAX_VALUE;
+        ServerObj temp=null;
+
+        for(ServerObj server:this.serverList){
+            if(server.getWJobs()==0 && server.getRJobs()==0){return server;}
+        }
         for(ServerObj server:this.serverList){
             if(server.getWJobs()==0){return server;}
         }
-        return this.serverList.get(0);
+        for(ServerObj server:this.serverList){
+            if(server.getWJobs()<min){
+                min=server.getWJobs();
+                temp=server;
+            }
+        }
+
+        return temp;
     }
 
     private void sortBySize() {

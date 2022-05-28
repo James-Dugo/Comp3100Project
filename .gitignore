@@ -20,3 +20,5 @@ Demoing/S1DemoConfigs/S1DemoSummary.txt
 Demoing/S1DemoConfigs/stage1.diff
 demoing/stage2-test/ds-jobs.xml
 demoing/stage2-test/ds-system.xml
+ds-sim/ds-jobs.xml
+ds-sim/ds-system.xml
