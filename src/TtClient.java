@@ -3,9 +3,10 @@ public class TtClient extends Client{
     /**
      * Constructor method that sets the hostname and port
      */
-    TtClient(String hostname, int port){
+    TtClient(String hostname, int port, Boolean verbose){
         this.hostname=hostname;
         this.port=port;
+        this.verbose=verbose;
     }
 
     /**

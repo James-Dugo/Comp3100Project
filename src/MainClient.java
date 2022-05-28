@@ -42,13 +42,13 @@ public class MainClient {
         }
 
         if(algorithm.equalsIgnoreCase("fc")){
-            FcClient client=new FcClient(hostname,port);
+            FcClient client=new FcClient(hostname,port,verbose);
             client.mainLoop();
         }else if(algorithm.equalsIgnoreCase("lrr")){
-            LrrClient client=new LrrClient(hostname,port);
+            LrrClient client=new LrrClient(hostname,port,verbose);
             client.mainLoop();
         }else if(algorithm.equalsIgnoreCase("tt")){
-            TtClient client=new TtClient(hostname,port);
+            TtClient client=new TtClient(hostname,port,verbose);
             client.mainLoop();
         }
     }

@@ -1,13 +1,12 @@
-import java.util.logging.Level;
-
 public class FcClient extends Client{
 
     /**
      * Constructor method that sets the hostname and port
      */
-    FcClient(String hostname, int port){
+    FcClient(String hostname, int port, Boolean verbose){
         this.hostname=hostname;
         this.port=port;
+        this.verbose=verbose;
     }
 
     ServerObj first;

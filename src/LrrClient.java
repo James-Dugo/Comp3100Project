@@ -7,9 +7,10 @@ public class LrrClient extends Client{
     /**
      * Constructor method that sets the hostname and port
      */
-    LrrClient(String host,int port){
+    LrrClient(String host,int port, Boolean verbose){
         this.hostname=host;
-        this.port=port;    
+        this.port=port;
+        this.verbose=verbose;    
     }
     
     /**

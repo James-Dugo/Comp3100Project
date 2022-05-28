@@ -31,6 +31,7 @@ public abstract class Client {
     public JobObj currentJob;
     public String hostname;
     public int port;
+    public Boolean verbose;
 
     //Setup the logger
     static {
@@ -90,7 +91,7 @@ public abstract class Client {
     public String recieve() {
         try{
             String temp=din.readLine();
-            logger.log(Level.INFO,"RCVD: "+temp);
+            if(verbose)logger.log(Level.INFO,"RCVD: "+temp);
             return temp;
         }catch(IOException e){
             logger.log(Level.SEVERE,"ERR: "+e);
@@ -108,7 +109,7 @@ public abstract class Client {
         try {
             dout.write(msg.getBytes());
             dout.flush();
-            logger.log(Level.INFO,"SENT: "+msg);
+            if(verbose)logger.log(Level.INFO,"SENT: "+msg);
         } catch(IOException e){
             logger.log(Level.SEVERE,"ERR: "+e);
         }
@@ -142,7 +143,7 @@ public abstract class Client {
 
         //finished Reading DATA * *
         this.send("OK\n");
-        logger.log(Level.INFO, "RCVD: "+this.reply);
+        if(verbose)logger.log(Level.INFO, "RCVD: "+this.reply);
     }
 
     /**
