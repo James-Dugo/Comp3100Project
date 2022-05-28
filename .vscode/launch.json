@@ -5,12 +5,20 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
             "type": "java",
             "name": "tt",
             "request": "launch",
             "mainClass": "${file}",
             "args": "-u localhost:50000 -a tt -v true"
+        },
+        {
+            "type": "java",
+            "name": "lrr",
+            "request": "launch",
+            "mainClass": "${file}",
+            "args": "-u localhost:50000 -a lrr -v true"
         },
     ]
 }

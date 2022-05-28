@@ -15,8 +15,12 @@ public class ServerObj {
     private int core;
     private int mem;
     private int disk;
+    private int availableCore;
+    private int availableMem;
+    private int availableDisk;
     private int wJobs;
     private int rJobs;
+    private int fitness;
 
     public List<JobObj> jobs=new ArrayList<JobObj>();
 
@@ -50,18 +54,39 @@ public class ServerObj {
      * @return true if the currJob can be run immediately false otherwise
      */
     public Boolean checkAvailableResources(JobObj currJob){
-        
-        for (JobObj job : this.jobs) {
-            this.core-=job.getCores();
-            this.mem-=job.getMem();
-            this.disk-=job.getDisk();
+        this.resetAvailable();
 
-            if(this.core<currJob.getCores()){return false;}
-            else if(this.mem<currJob.getMem()){return false;}
-            else if(this.disk<currJob.getDisk()){return false;}
+        for (JobObj job : this.jobs) {
+            this.availableCore-=job.getCores();
+            this.availableMem-=job.getMem();
+            this.availableDisk-=job.getDisk();
+        }
+        if(this.core<currJob.getCores()){return false;}
+        else if(this.mem<currJob.getMem()){return false;}
+        else if(this.disk<currJob.getDisk()){return false;}
+        else{return true;}
+    }
+
+    public int getFitnessScore(){
+        this.resetAvailable();
+
+        for (JobObj job : this.jobs){
+            this.availableCore-=job.getCores();
         }
 
-        return true;
+        this.fitness=this.core-this.availableCore;
+        return this.fitness;
+    }
+
+    private void resetAvailable() {
+        this.availableCore=this.core;
+        this.availableMem=this.mem;
+        this.availableDisk=this.disk;
+    }
+    public void setAvailable() {
+        this.core=this.availableCore;
+        this.mem=this.availableMem;
+        this.disk=this.availableDisk;
     }
 
     public int    getCore()   {return this.core;}
@@ -76,4 +101,6 @@ public class ServerObj {
 
     public void incrementLimit() {this.limit++;}
     public void decrLimit()      {this.limit--;}
+
+
 }

@@ -1,6 +1,7 @@
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.logging.Level;
+import java.util.List;
 
 public class TtClient extends Client{
 
@@ -37,17 +38,36 @@ public class TtClient extends Client{
                     this.currentJob=new JobObj(this.reply);
                     //GETS Capable currentJob
                     this.getCapable();
-                    //For each server get the jobs and attach them to the server if there are any
-                    for(ServerObj server:this.serverList){
-                        if( server.getWJobs()>0 || server.getRJobs()>0){
-                            this.getJobs(server);
-                        }                        
-                    }
-
-                    this.sortBySize();
+                    this.sortBySize(this.serverList);
                     this.serverStar=this.getStar();
                     this.schd(this.currentJob.getID(), this.serverStar.getType(), this.serverStar.getId());
                     continue loop;
+
+                case "JCPL":
+                    int overSize=5;
+                    this.getAll();
+                    List<ServerObj> idleList = new ArrayList<ServerObj>();
+                    List<ServerObj> overList = new ArrayList<ServerObj>();
+                    for(ServerObj server: this.serverList){
+                        if(server.getWJobs()>overSize){
+                            this.setJobs(server);
+                        }
+                        if(server.getStatus().equals("idle")){
+                            idleList.add(server);
+                        }
+                        if(server.getWJobs()>2){
+                            overList.add(server);
+                        }
+                    }
+
+                    for(ServerObj overServer:overList){
+                        while(overServer.jobs.size()>overSize&&idleList.size()>0){
+                            this.migrate( (overServer.jobs.get(overServer.jobs.size()-1)), overServer, idleList.get(0));
+                            idleList.remove(0);
+                        }
+                    }
+                    continue loop;
+
                 case "NONE":
                     this.cleanup();
                     break loop;
@@ -58,7 +78,28 @@ public class TtClient extends Client{
 
     }
 
-    private void getJobs(ServerObj server) {
+    private void migrate(JobObj job, ServerObj source,ServerObj target) {
+        this.send(String.format("MIGJ %d %s %d %s %d\n",job.getID(),source.getType(),source.getId(),target.getType(),target.getId()));
+    }
+
+    private void getAll() {
+        this.serverList.clear();
+        this.send("GETS All\n");
+        this.splitReply();
+        int numLines=Integer.parseInt(this.splitReply[1]);
+        this.write("OK\n");
+        for (int i = 0; i < numLines; i++) {
+            this.reply=this.recieve();
+            this.serverList.add(new ServerObj(this.reply));
+        }
+        this.send("OK\n");
+    }
+
+    private int countJobs(ServerObj server,int jobState){
+        this.send(String.format("CNTJ %s %d %d",server.getType(),server.getId(),jobState));
+        return Integer.parseInt(this.reply);
+    }
+    private void setJobs(ServerObj server) {
         this.send(String.format("LSTJ %s %d\n",server.getType(),server.getId()));
         this.splitReply();
         int numLines=Integer.parseInt(this.splitReply[1]);
@@ -72,39 +113,31 @@ public class TtClient extends Client{
     }
 
     private ServerObj getStar() {
-        int min=Integer.MAX_VALUE;
-        ServerObj temp=null;
 
+        /**
+         * check through the list and if the fitness Score(total resources-available resources) is >0 
+         * and there are enough resources to fit the job
+         * add the job to a new list
+         */
         for(ServerObj server:this.serverList){
-            if(server.getWJobs()>0||server.getRJobs()>0){
-                if(server.checkAvailableResources(this.currentJob)){
-                    return server;
-                }
-            }
-        }
+            if(server.getStatus().equals("idle")){return server;}
 
-        for(ServerObj server:this.serverList){
-            if(server.getWJobs()==0 && server.getRJobs()==0){
-                return server;}
-        }
-        for(ServerObj server:this.serverList){
             if(server.getWJobs()==0){
-                return server;}
-        }
-        for(ServerObj server:this.serverList){
-            if( server.getWJobs()<min && (server.getStatus().equals("booting")||server.getStatus().equals("active")) ){
-                min=server.getWJobs();
-                temp=server;
+                return server;
             }
         }
 
-        if(temp==null){return this.serverList.get(0);}
+        for(ServerObj server:this.serverList){
+            if(server.getStatus().equals("active")||server.getStatus().equals("booting")){
+                return server;
+            }
+        }
 
-        return temp;
+        return this.serverList.get(0);
     }
 
-    private void sortBySize() {
-        Collections.sort(this.serverList, new Comparator<ServerObj>(){
+    private void sortBySize(List<ServerObj> list) {
+        Collections.sort(list, new Comparator<ServerObj>(){
             @Override
             public int compare(ServerObj a, ServerObj b){
                 //By ascending Core size>Memory>Disk
