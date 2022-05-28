@@ -6,23 +6,20 @@ import java.util.List;
 public class TtClient extends Client{
 
     private ServerObj serverStar=null;
+    private int size;
 
     /**
      * Constructor method that sets the hostname and port
      */
-    TtClient(String hostname, int port, Boolean verbose){
+    TtClient(String hostname, int port, Boolean verbose,int size){
         this.hostname=hostname;
         this.port=port;
         this.verbose=verbose;
+        this.size=size;
     }
 
     /**
-     * I want to prioritise in order
-     * 1. Servers that are Idle waiting for a Job
-     * 2. The server that best fits the job (get servers capable, sort by size, pick first)
-     * 3. I don't need to parralellize the jobs since the time to complete doesn't take into account free space
      * 
-     * Step 1. get a list of the servers, The xml is cleanest for getting the list of servers.
      */
     public void runClient(){
         this.newConn(hostname, port);
@@ -44,7 +41,7 @@ public class TtClient extends Client{
                     continue loop;
 
                 case "JCPL":
-                    int overSize=5;
+                    int overSize=this.size;
                     this.getAll();
                     List<ServerObj> idleList = new ArrayList<ServerObj>();
                     List<ServerObj> overList = new ArrayList<ServerObj>();
@@ -62,6 +59,7 @@ public class TtClient extends Client{
 
                     for(ServerObj overServer:overList){
                         while(overServer.jobs.size()>overSize&&idleList.size()>0){
+                            if(verbose){System.out.println(String.format("Migrating from: %s %d, to: %s %d",overServer.getType(),overServer.getId(),idleList.get(0).getType(),idleList.get(0).getId()));}
                             this.migrate( (overServer.jobs.get(overServer.jobs.size()-1)), overServer, idleList.get(0));
                             idleList.remove(0);
                         }
