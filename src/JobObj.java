@@ -3,6 +3,7 @@ public class JobObj {
     private int jobCores;
     private int jobMem;
     private int jobDisk;
+    private int jobState;
     
     public JobObj(String jobString){
         String jobArr[]=jobString.split(" ");
@@ -12,10 +13,19 @@ public class JobObj {
         this.jobDisk=Integer.parseInt(jobArr[6]);
     }
 
+    public JobObj(String[] sArr) {
+        this.jobId=Integer.parseInt(sArr[0]);
+        this.jobState=Integer.parseInt(sArr[1]);
+        this.jobCores=Integer.parseInt(sArr[5]);
+        this.jobMem=Integer.parseInt(sArr[6]);
+        this.jobDisk=Integer.parseInt(sArr[7]);
+    }
+
     public int getID(){return jobId;}
     public int getCores(){return jobCores;}
     public int getMem(){return jobMem;}
     public int getDisk(){return jobDisk;}
+    public int getState(){return jobState;}
 
     /**
      * 

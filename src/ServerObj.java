@@ -1,5 +1,8 @@
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.w3c.dom.NamedNodeMap;
 
 public class ServerObj {
@@ -14,6 +17,8 @@ public class ServerObj {
     private int disk;
     private int wJobs;
     private int rJobs;
+
+    public List<JobObj> jobs=new ArrayList<JobObj>();
 
     public ServerObj(String reply){
         String[] serverArr=reply.split(" ");
@@ -37,6 +42,26 @@ public class ServerObj {
         core=Integer.parseInt(server.getNamedItem("cores").getTextContent());
         mem=Integer.parseInt(server.getNamedItem("memory").getTextContent());
         disk=Integer.parseInt(server.getNamedItem("disk").getTextContent());
+    }
+
+    /**
+     * Given a Job checks that the list of jobs waiting on the server currently leave room for that job to be run immediately
+     * @param currJob
+     * @return true if the currJob can be run immediately false otherwise
+     */
+    public Boolean checkAvailableResources(JobObj currJob){
+        
+        for (JobObj job : this.jobs) {
+            this.core-=job.getCores();
+            this.mem-=job.getMem();
+            this.disk-=job.getDisk();
+
+            if(this.core<currJob.getCores()){return false;}
+            else if(this.mem<currJob.getMem()){return false;}
+            else if(this.disk<currJob.getDisk()){return false;}
+        }
+
+        return true;
     }
 
     public int    getCore()   {return this.core;}
