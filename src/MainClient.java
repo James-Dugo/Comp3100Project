@@ -12,7 +12,7 @@ public class MainClient {
             System.out.println(arg);
         }
 
-        if(args.length%2!=0){usage();}
+        if( (args.length%2!=0)||(args.length==0)){usage();}
         /**
          * Goes through the arguments and sets the hostname,port and algorithm based on them
          * -u [hostname:port] -a [fc|lrr] defaults 
@@ -40,9 +40,6 @@ public class MainClient {
                     port=50000;
             }
         }
-
-        hostname=args[1];
-        port=Integer.parseInt(args[2]);
 
         if(algorithm.equalsIgnoreCase("fc")){
             FcClient client=new FcClient(hostname,port);
