@@ -203,7 +203,7 @@ public abstract class Client {
     }
 
     /**
-     * This method handles what the client wants to do each cycle of the simulation
+     * This is what the main() calls to run the algorithm
      */
-    abstract void mainLoop();
+    abstract void runClient();
 }

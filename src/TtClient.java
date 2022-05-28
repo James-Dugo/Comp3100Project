@@ -23,7 +23,7 @@ public class TtClient extends Client{
      * 
      * Step 1. get a list of the servers, The xml is cleanest for getting the list of servers.
      */
-    public void mainLoop(){
+    public void runClient(){
         this.newConn(hostname, port);
         
         loop:
@@ -64,7 +64,7 @@ public class TtClient extends Client{
         int numLines=Integer.parseInt(this.splitReply[1]);
         this.write("OK\n");
         for(int i=0;i<numLines;i++){
-            this.recieve();
+            this.reply=this.recieve();
             this.splitReply();
             server.jobs.add(new JobObj(this.splitReply));
         }

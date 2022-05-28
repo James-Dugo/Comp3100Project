@@ -34,7 +34,7 @@ public class LrrClient extends Client{
         this.largest.decrLimit();
     }
 
-    void mainLoop(){
+    void runClient(){
         Boolean firstLoop=true;
         int currentServerId=0;
         this.newConn("localhost", 50000);

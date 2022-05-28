@@ -11,7 +11,7 @@ public class FcClient extends Client{
 
     ServerObj first;
 
-    void mainLoop(){
+    void runClient(){
         this.newConn(this.hostname,this.port);
 
         loop:
