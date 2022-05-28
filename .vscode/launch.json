@@ -4,20 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "java",
-            "name": "Launch Current File",
+            "name": "tt",
             "request": "launch",
             "mainClass": "${file}",
-            "args": "fc localhost 50000"
+            "args": "-u localhost:50000 -a tt -v true"
         },
-        {
-            "type": "java",
-            "name": "Launch MainClient",
-            "request": "launch",
-            "mainClass": "MainClient",
-            "projectName": "Comp3100Project_ff4bb140",
-            "args": "fc localhost 50000"
-        }
     ]
 }

@@ -7,10 +7,6 @@ public class MainClient {
     static Boolean verbose=false;
 
     public static void main(String[] args) {
-        
-        for(String arg:args){
-            System.out.println(arg);
-        }
 
         if( (args.length%2!=0)||(args.length==0)){usage();}
         /**
@@ -30,7 +26,7 @@ public class MainClient {
                     i++;
                     break;
                 case "-v":
-                    verbose=true;
+                    verbose=Boolean.parseBoolean(args[i+1]);
                     i++;
                     break;
                 default:

@@ -31,14 +31,14 @@ public abstract class Client {
     public JobObj currentJob;
     public String hostname;
     public int port;
-    public Boolean verbose;
+    public Boolean verbose=true;
 
     //Setup the logger
     static {
         try {
             LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
         } catch (SecurityException | IOException e1) {
-            e1.printStackTrace();
+            //e1.printStackTrace();
         }
     }
     public static final Logger logger=Logger.getLogger(LrrClient.class.getName());

@@ -12,6 +12,8 @@ public class ServerObj {
     private int core;
     private int mem;
     private int disk;
+    private int wJobs;
+    private int rJobs;
 
     public ServerObj(String reply){
         String[] serverArr=reply.split(" ");
@@ -22,6 +24,10 @@ public class ServerObj {
         core=Integer.parseInt(serverArr[4]);
         mem=Integer.parseInt(serverArr[5]);
         disk=Integer.parseInt(serverArr[6]);
+        if(serverArr.length>6){
+            wJobs=Integer.parseInt(serverArr[7]);
+            rJobs=Integer.parseInt(serverArr[8]);
+        }
     }
     // format for reference <server type="juju" limit="2" bootupTime="60" hourlyRate="0.20" cores="2" memory="4000" disk="16000" />
     public ServerObj(NamedNodeMap server){
@@ -33,19 +39,15 @@ public class ServerObj {
         disk=Integer.parseInt(server.getNamedItem("disk").getTextContent());
     }
 
-    public int getCore(){
-        return this.core;
-    }
-    public String getType() {
-        return this.type;
-    }
-    public int getLimit() {
-        return this.limit;
-    }
-    public void incrementLimit() {
-        this.limit++;
-    }
-    public void decrLimit(){
-        this.limit--;
-    }
+    public int    getCore()  {return this.core;}
+    public int    getLimit() {return this.limit;}
+    public int    getMem()   {return this.mem;}
+    public int    getDisk()  {return this.disk;}
+    public int    getId()    {return this.id;}
+    public int    getWJobs() {return this.wJobs;}
+    public int    getRJobs() {return this.rJobs;}
+    public String getType()  {return this.type;}
+
+    public void incrementLimit() {this.limit++;}
+    public void decrLimit()      {this.limit--;}
 }
