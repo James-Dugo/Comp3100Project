@@ -39,14 +39,15 @@ public class ServerObj {
         disk=Integer.parseInt(server.getNamedItem("disk").getTextContent());
     }
 
-    public int    getCore()  {return this.core;}
-    public int    getLimit() {return this.limit;}
-    public int    getMem()   {return this.mem;}
-    public int    getDisk()  {return this.disk;}
-    public int    getId()    {return this.id;}
-    public int    getWJobs() {return this.wJobs;}
-    public int    getRJobs() {return this.rJobs;}
-    public String getType()  {return this.type;}
+    public int    getCore()   {return this.core;}
+    public int    getLimit()  {return this.limit;}
+    public int    getMem()    {return this.mem;}
+    public int    getDisk()   {return this.disk;}
+    public int    getId()     {return this.id;}
+    public int    getWJobs()  {return this.wJobs;}
+    public int    getRJobs()  {return this.rJobs;}
+    public String getType()   {return this.type;}
+    public String getStatus() {return this.status;}
 
     public void incrementLimit() {this.limit++;}
     public void decrLimit()      {this.limit--;}
