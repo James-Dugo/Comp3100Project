@@ -33,8 +33,17 @@ public class TtClient extends Client{
 
             switch(this.splitReply[0]){
                 case "JOBN":
+                    //The current job is this reply
                     this.currentJob=new JobObj(this.reply);
+                    //GETS Capable currentJob
                     this.getCapable();
+                    //For each server get the jobs and attach them to the server if there are any
+                    for(ServerObj server:this.serverList){
+                        if( server.getWJobs()>0 || server.getRJobs()>0){
+                            this.getJobs(server);
+                        }                        
+                    }
+
                     this.sortBySize();
                     this.serverStar=this.getStar();
                     this.schd(this.currentJob.getID(), this.serverStar.getType(), this.serverStar.getId());
@@ -49,9 +58,30 @@ public class TtClient extends Client{
 
     }
 
+    private void getJobs(ServerObj server) {
+        this.send(String.format("LSTJ %s %d\n",server.getType(),server.getId()));
+        this.splitReply();
+        int numLines=Integer.parseInt(this.splitReply[1]);
+        this.write("OK\n");
+        for(int i=0;i<numLines;i++){
+            this.recieve();
+            this.splitReply();
+            server.jobs.add(new JobObj(this.splitReply));
+        }
+        this.send("OK\n");
+    }
+
     private ServerObj getStar() {
         int min=Integer.MAX_VALUE;
         ServerObj temp=null;
+
+        for(ServerObj server:this.serverList){
+            if(server.getWJobs()>0||server.getRJobs()>0){
+                if(server.checkAvailableResources(this.currentJob)){
+                    return server;
+                }
+            }
+        }
 
         for(ServerObj server:this.serverList){
             if(server.getWJobs()==0 && server.getRJobs()==0){
@@ -67,6 +97,8 @@ public class TtClient extends Client{
                 temp=server;
             }
         }
+
+        if(temp==null){return this.serverList.get(0);}
 
         return temp;
     }
