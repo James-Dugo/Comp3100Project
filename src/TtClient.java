@@ -34,10 +34,7 @@ public class TtClient extends Client{
             switch(this.splitReply[0]){
                 case "JOBN":
                     this.currentJob=new JobObj(this.reply);
-                    int i=this.getAvailable();
-                    if(i==0){
-                        this.getCapable();
-                    }                    
+                    this.getCapable();
                     this.sortBySize();
                     this.serverStar=this.getStar();
                     this.schd(this.currentJob.getID(), this.serverStar.getType(), this.serverStar.getId());
@@ -50,42 +47,6 @@ public class TtClient extends Client{
             }
         }
 
-    }
-
-    public int getAvailable() {
-
-        //clear the stale list
-        this.serverList.clear();
-        //send GETS Avail * * *(curr Job info)
-        String[] msg=this.currentJob.capableMsg();
-        this.send(String.format("GETS Avail %s %s %s\n",(Object[]) msg));
-        
-        //if . there are no available servers with that many resources
-        
-
-        //DATA >*< * is the num of lines
-        int numLines=Integer.parseInt(this.reply.split(" ")[1]);
-
-        //ready for the data
-        this.write("OK\n");
-        //Add servers to list
-        for (int i = 0; i < numLines; i++) {
-            this.reply=this.recieve();
-            ServerObj server= new ServerObj(this.reply);
-            this.serverList.add(server);
-        }
-
-        if (this.serverList.size()==0){
-            this.send("OK\n");
-            this.recieve();
-            return 0;
-        }
-
-        //finished Reading DATA
-        this.send("OK\n");
-        if(verbose)logger.log(Level.INFO, "RCVD: "+this.reply);
-
-        return 1;
     }
 
     private ServerObj getStar() {
