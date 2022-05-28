@@ -18,3 +18,5 @@ Demoing/S1DemoConfigs/ds-S1-config08--demo.xml-my-log.txt
 Demoing/S1DemoConfigs/ds-S1-config08--demo.xml-ref-log.txt
 Demoing/S1DemoConfigs/S1DemoSummary.txt
 Demoing/S1DemoConfigs/stage1.diff
+demoing/stage2-test/ds-jobs.xml
+demoing/stage2-test/ds-system.xml
