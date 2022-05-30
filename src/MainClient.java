@@ -6,6 +6,7 @@ public class MainClient {
     static String algorithm;
     static Boolean verbose=false;
     static int size=10;
+    static int minSize=5;
 
     public static void main(String[] args) {
 
@@ -31,6 +32,10 @@ public class MainClient {
                         verbose=Boolean.parseBoolean(args[i+1]);
                         i++;
                         break;
+                    case "-s":
+                        minSize=Integer.parseInt(args[i+1]);
+                        i++;
+                        break;
                     default:
                         System.err.println("Using default");
                         algorithm="tt";
@@ -47,7 +52,7 @@ public class MainClient {
             LrrClient client=new LrrClient(hostname,port,verbose);
             client.runClient();
         }else if(algorithm.equalsIgnoreCase("tt")){
-            TtClient client=new TtClient(hostname,port,verbose,size);
+            TtClient client=new TtClient(hostname,port,verbose,size,minSize);
             client.runClient();
         }
     }

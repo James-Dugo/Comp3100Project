@@ -7,15 +7,17 @@ public class TtClient extends Client{
 
     private ServerObj serverStar=null;
     private int size;
+    private int minSize;
 
     /**
      * Constructor method that sets the hostname and port
      */
-    TtClient(String hostname, int port, Boolean verbose,int size){
+    TtClient(String hostname, int port, Boolean verbose,int size,int minSize){
         this.hostname=hostname;
         this.port=port;
         this.verbose=verbose;
         this.size=size;
+        this.minSize=minSize;
     }
 
     /**
@@ -42,6 +44,7 @@ public class TtClient extends Client{
 
                 case "JCPL":
                     int overSize=this.size;
+                    int underSize=this.minSize;
                     this.getAll();
                     List<ServerObj> idleList = new ArrayList<ServerObj>();
                     List<ServerObj> overList = new ArrayList<ServerObj>();
@@ -49,7 +52,7 @@ public class TtClient extends Client{
                         if(server.getWJobs()>overSize){
                             this.setJobs(server);
                         }
-                        if(server.getStatus().equals("idle")){
+                        if(server.getWJobs()<underSize){
                             idleList.add(server);
                         }
                         if(server.getWJobs()>2){
@@ -93,10 +96,6 @@ public class TtClient extends Client{
         this.send("OK\n");
     }
 
-    private int countJobs(ServerObj server,int jobState){
-        this.send(String.format("CNTJ %s %d %d",server.getType(),server.getId(),jobState));
-        return Integer.parseInt(this.reply);
-    }
     private void setJobs(ServerObj server) {
         this.send(String.format("LSTJ %s %d\n",server.getType(),server.getId()));
         this.splitReply();
@@ -110,13 +109,15 @@ public class TtClient extends Client{
         this.send("OK\n");
     }
 
+    /**
+     * finds the best server in this.serverList based on a set of conditions 
+     * 1. The server is "idle"
+     * 2. The server has no waiting jobs
+     * 3. The server is active||booting
+     * @return
+     */
     private ServerObj getStar() {
 
-        /**
-         * check through the list and if the fitness Score(total resources-available resources) is >0 
-         * and there are enough resources to fit the job
-         * add the job to a new list
-         */
         for(ServerObj server:this.serverList){
             if(server.getStatus().equals("idle")){return server;}
 
@@ -134,6 +135,15 @@ public class TtClient extends Client{
         return this.serverList.get(0);
     }
 
+    /**
+     * Given a List of server objects this function sorts them by:
+     * 1-5 lexicographically
+     * 1.Cores asc
+     * 2.Memory asc
+     * 3.Disk asc
+     * 4.Waiting Jobs desc
+     * 5.Running Jobs desc
+     */
     private void sortBySize(List<ServerObj> list) {
         Collections.sort(list, new Comparator<ServerObj>(){
             @Override
